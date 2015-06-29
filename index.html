@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/Games">
+    <head>
+        <title>Ping Pong</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+        
+        
+       
+        <link href="style.css" rel="stylesheet" type="text/css"/>
+        <script>window.jQuery || document.write('<script src="js/jquery-1.7.1.min.js"><\/script>')</script>
+        <script>
+                     
+            $(function() {
+                var browser = {};
+                browser.width = $(document).width();
+                browser.height = $(document).height();
+                
+                if(browser.width<= 1440 && browser.height<= 900){
+                    var X = 362;
+                    var Y = 187;
+                    var TOP  =  150;
+                } else {
+                    var X = 450;
+                    var Y = 280;
+                    var TOP  =  220;
+                }
+                
+                var KEY  =  {
+                    UP: 38,
+                    DOWN: 40,
+                    W: 87,
+                    S: 83
+                };
+                                                             
+                var pong = {};
+                pong.pressedKeys = [];
+                pong.ball = {
+                    speed:5,
+                    x:X,
+                    y:Y,
+                    directionX:1,
+                    directionY:1,
+                    rotate:0,
+                    degree:0
+                };
+                pong.barTop = TOP;
+                pong.scoreA = 0;
+                pong.scoreB = 0;
+                pong.playState = 0;
+                pong.timer = 0;
+                pong.difficult = 0;
+                pong.imageCounter = 0;
+                pong.background = setInterval(changeBackground, 20000);
+                pong.gameControl =  $('#controls').attr('display');
+                
+                var assett = {};
+                assett.background  =  ['background.jpg','background2.jpg','background3.jpg','background4.jpg','background5.jpg','background6.jpg'];
+                assett.sound  =  {
+                    soundtrack: new Audio('sound/soundtrack.ogg') ,
+                    boing: new Audio('sound/boing.ogg'),
+                    risata: new Audio('sound/risata.ogg'),
+                    applausi: new Audio('sound/applausi.ogg'),
+                    controls: new Audio('sound/controls.ogg'),
+                    robot: new Audio('sound/robot.ogg')
+                };
+               // assett.image = new Image('img/lampada2.png');
+                                
+                function gameloop() {
+                    stopGames();
+                    moveBar();
+                    moveBall();
+                }
+                   
+                function moveBar() {
+                    if(pong.pressedKeys[KEY.UP]){
+                        var top  =  parseInt($('#barB').css('top'));
+                        if(top >=  parseInt($('#playground').css('top'))){
+                            $('#barB').css('top',top-15);    
+                        }
+                    }
+                        
+                    if(pong.pressedKeys[KEY.DOWN]){
+                        var top  =  parseInt($('#barB').css('top'));
+                        if(top <=  parseInt($('#playground').css('height'))- parseInt($('#barB').css('height'))){
+                            $('#barB').css('top',top+15);
+                        }
+                    }
+                        
+                    if(pong.pressedKeys[KEY.W]){
+                        var top  =  parseInt($('#barA').css('top'));
+                        if(top >=  parseInt($('#playground').css('top'))){
+                            $('#barA').css('top',top-15); 
+                        }
+                    }
+                        
+                    if(pong.pressedKeys[KEY.S]){
+                        var top  =  parseInt($('#barA').css('top'));
+                        if(top <=  parseInt($('#playground').css('height')) - parseInt($('#barA').css('height'))){
+                            $('#barA').css('top',top+15);
+                        }
+                    }
+                }
+                
+                function moveBall() {
+                    var playgroundWidth  =  parseInt($('#playground').css('width'));
+                    var playgroundHeight =  parseInt($('#playground').css('height'));
+                    var ball = pong.ball;
+                    
+                    if(ball.x + ball.speed * ball.directionX >=  playgroundWidth ){
+                        pong.scoreA++;
+                        assett.sound.risata.play();
+                        assett.sound.applausi.play();
+                        
+                        $('#scoreA').html(pong.scoreA);
+                        $('#message').html('Press Enter to Start Again!');
+                        resetBoard();
+                        ball.directionX  =  -1;
+                    }
+                     
+                    if(ball.x + ball.speed * ball.directionX < 0){
+                        pong.scoreB++;
+                        assett.sound.risata.play();
+                        assett.sound.applausi.play();
+                        $('#scoreB').html(pong.scoreB);
+                        $('#message').html('Press Enter to Start Again!');
+                        resetBoard();
+                        ball.directionX  =  1;
+                    }
+                
+                    if(ball.y + ball.speed * ball.directionY >=  playgroundHeight) {
+                        ball.directionY  =  -1;
+                    }
+                    
+                    if(ball.y + ball.speed * ball.directionY < 0){
+                        ball.directionY  =  1;
+                    }
+                    
+                    ball.x +=  ball.speed * ball.directionX;
+                    ball.y +=  ball.speed * ball.directionY;
+                    
+                    $('#ball').css({
+                        'left':ball.x,
+                        'top': ball.y
+                    });
+                    
+                    var barAYtop  =  parseInt($('#barA').css('top'));
+             
+                    var barAYbottom  =  parseInt($('#barA').css('top'))  + parseInt($('#barA').css('height'));                    
+                    
+                    var barAX  =  parseInt($('#barA').css('left')) + parseInt($('#barA').css('width'));
+                    
+                    var barBYtop  =  parseInt($('#barB').css('top'));
+                    
+                    var barBYbottom  =  parseInt($('#barB').css('top'))  + parseInt($('#barB').css('height'));
+                    
+                    var barBX  =  parseInt($('#barB').css('left')) - parseInt($('#barB').css('width'));
+                    
+                    if(ball.x + ball.speed * ball.directionX < barAX){
+                        if(ball.y + ball.speed * ball.directionY <=  barAYbottom && 
+                            ball.y + ball.speed * ball.directionY >=  barAYtop){
+                            ball.directionX = 1;
+                            assett.sound.boing.play();
+                        }
+                    }
+                    
+                    if(ball.x + ball.speed * ball.directionX > barBX){
+                        if(ball.y + ball.speed * ball.directionY <=  barBYbottom && 
+                            ball.y + ball.speed * ball.directionY >=  barBYtop){
+                            ball.directionX = -1;
+                            assett.sound.boing.play();
+                        }
+                    }
+                }
+                
+                function stopGames() {
+                    if(pong.scoreA >=  5){
+                        resetScore()
+                        resetBoard();
+                        assett.sound.soundtrack.pause();
+                        $('#message').html('Press Enter to Start Again!');
+                    } else if(pong.scoreB >=  5) {
+                        resetScore()
+                        resetBoard();
+                        $('#message').html('Press Enter to Start Again!');
+                    }
+                }
+                
+                function startGames() {
+                    
+                    if(pong.playState === 1){
+                        return false;
+                    } else {
+                        resetBoard();
+                        assett.sound.soundtrack.play();
+                        pong.playState = 1;
+                        pong.timer = setInterval(gameloop,30);
+                        pong.difficult = setInterval(increaseDifficulty,1500);
+                        pong.ball.rotate = setInterval(rotateBall,10);
+                    }
+                }
+                
+                function resetScore() {
+                    pong.scoreA = 0;
+                    pong.scoreB = 0;
+                    $('#scoreA').html(pong.scoreA);
+                    $('#scoreB').html(pong.scoreB); 
+                }
+                
+                function resetBoard() {
+                    pong.ball.x = X;
+                    pong.ball.y = Y; 
+                    pong.ball.speed = 5;
+                    pong.ball.degree = 0;
+                    $('#ball').css('-webkit-transform','rotate('+ pong.ball.degree +'deg)');
+                    $('#ball').css('-moz-transform','rotate('+ pong.ball.degree +'deg)');
+                    
+                                      
+                    $('#barA, #barB').css({
+                        'top': pong.barTop + 'px'
+                    });
+                    
+                    $('#difficulty').html('0');
+                        
+                    $('#ball').css({
+                        'left': pong.ball.x,
+                        'top': pong.ball.y
+                    });
+                    pong.playState = 0;
+                    pong.ball.speed = 5;
+                    
+                    clearInterval(pong.timer);
+                    clearInterval(pong.difficult);
+                    clearInterval(pong.ball.rotate);
+                }
+                
+                function increaseDifficulty() {
+                    pong.ball.speed++;
+                    $('#difficulty').html(pong.ball.speed);
+                }
+               
+                function changeBackground() {
+                    if(pong.imageCounter === 6){
+                        pong.imageCounter = 0;
+                    } 
+                    $('#playground').css('background-image','url(img/' + assett.background[pong.imageCounter] + ')')
+                    pong.imageCounter++;
+                }
+                
+                function rotateBall() {
+                    pong.ball.degree++;
+                    $('#ball').css('-webkit-transform','rotate('+ pong.ball.degree +'deg)');
+                    $('#ball').css('-moz-transform','rotate('+ pong.ball.degree +'deg)');
+                }
+                
+                $(document).keydown(function(e){
+                    
+                    if(e.which === 13){
+                        startGames();
+                    }
+                             
+                    $(document).keyup(function(e){
+                        pong.pressedKeys[e.which] = false;
+                    })
+                   
+                    $(document).keydown(function(e){
+                        pong.pressedKeys[e.which] = true;
+                    })
+                });
+                
+                $('#joypad').click(function() {
+                    $('#controls').fadeIn('slow');
+                    resetScore()
+                    resetBoard();
+                    assett.sound.soundtrack.pause();
+                    assett.sound.controls.play();
+                });
+                    
+                $('#controls').click(function() {
+                    $(this).fadeOut('slow');
+                })    
+                
+                $('#idea').mouseover(function() {
+                    assett.sound.robot.play();
+                });
+                
+            });
+            
+            
+        </script>
+
+        <style>
+
+
+        </style>
+    </head>
+
+    <body>
+       
+        <header>
+            <hgroup>
+                <h2></h2>
+                <h1> Ping Pong</h1>
+            </hgroup>
+        </header>
+        <div id="game">
+            <div id="score">
+                <div id="panelA">
+                    <span class="text">Player A: </span><span id="scoreA">0</span>
+                </div>
+                <div id="panelC">
+                    <span class="text">Difficulty: </span><span id="difficulty">0</span>
+                </div>
+                <div id="panelB">
+                    <span class="text">Player B: </span><span id="scoreB">0</span>
+                </div>
+            </div>
+
+            <div id="playground">
+
+                <div id="barA"></div>
+
+                <div id="barB"></div>
+
+                <div id="ball"></div>
+
+            </div>
+
+            <div id="message">
+                Press the Enter to start game!
+            </div>
+
+            
+
+            <div id="controls" class="display">
+                <img src="img/controls.jpg" title="Game Controls" alt="Game Controls"/>                
+            </div>
+
+            <div>
+                <a id="idea" href="https://github.com/sachin4203" title="">
+                    
+                </a>
+            </div>
+
+
+            <div id="social">
+                
+            </div>
+
+        </div>
+        <footer>
+            
+
+        </footer>
+
+
+        <div id="fb-root"></div>
+        <script></script>
+        <!-- Place this tag where you want the +1 button to render -->
+
+        <!-- Place this render call where appropriate -->
+        <script type="text/javascript">
+   ;
+
+    ;
+        </script>
+
+    </body>
+</html>
